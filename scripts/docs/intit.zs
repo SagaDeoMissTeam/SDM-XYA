@@ -1,0 +1,3 @@
+
+
+// goldResources.init();

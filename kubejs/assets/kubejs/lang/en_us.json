@@ -1,0 +1,12 @@
+{
+    "sdm.rpg.easy_mode" : "Easy Mode",
+    "sdm.rpg.medium_mode" : "Medium Mode",
+    "sdm.rpg.hard_mode" : "Hard Mode",
+    "sdm.rpg.madness_mode" : "Madness Mode",
+
+    "sdm.rpg.easy_mode.description" : "",
+    "sdm.rpg.medium_mode.description" : "",
+    "sdm.rpg.hard_mode.description" : "",
+    "sdm.rpg.madness_mode.description" : "",
+    "sdm.rpg.tittle" : "Please select difficult"
+}
