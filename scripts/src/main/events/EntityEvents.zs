@@ -27,21 +27,23 @@ import stdlib.List;
 public class EntityEvents{
 
     //----------------------------------------------------------------
-    public static onPlayerLoggedInEvent() as void{
+    protected static onPlayerLoggedInEvent() as void{
         events.register<crafttweaker.forge.api.event.entity.player.PlayerLoggedInEvent>(event => {
             val player = event.entity;
             val level = player.level;
             if(level.isClientSide) return;
 
-            if(!("gameSetting" in player.customData)){
+            Developers.updateData(player);
+            PlayerDataBase.of(player).deserialize();
+            if(!("havePlaing" in player.customData)){
                 Manager.openScreen(player);
             }
 
-            PlayerStateMachine.of(player).syncData();
+            // PlayerStateMachine.of(player).syncData();
         });
     }
 
-    public static onPlayerLoggedOutEvent() as void{
+    protected static onPlayerLoggedOutEvent() as void{
         events.register<crafttweaker.forge.api.event.entity.player.PlayerLoggedOutEvent>(event => {
             val player = event.entity;
             val level = player.level;
@@ -51,7 +53,7 @@ public class EntityEvents{
     }
 
     //----------------------------------------------------------------
-    public static onStructureSaveEvent() as void{
+    protected static onStructureSaveEvent() as void{
         events.register<mods.rpgworld.events.StructureSaveEvent>(event => {
             val player as Player? = event.player;
             if(player == null) return;
@@ -63,7 +65,7 @@ public class EntityEvents{
     }
 
     //----------------------------------------------------------------
-    public static onEntityDamageEvent() as void{
+    protected static onEntityDamageEvent() as void{
         events.register<crafttweaker.forge.api.event.entity.living.LivingDamageEvent>(event => {
             var damageAmount = event.amount;
             var damagedEntity = event.entity;
@@ -108,7 +110,7 @@ public class EntityEvents{
     }
 
     //----------------------------------------------------------------
-    public static onPlayerInventoryChanceEvent() as void{
+    protected static onPlayerInventoryChanceEvent() as void{
         events.register<mods.crtultimate.events.entity.player.PlayerChangedInventoryEvent>(event => {
             var player = event.entity;
             val level = player.level;
@@ -119,7 +121,7 @@ public class EntityEvents{
     }
 
     //----------------------------------------------------------------
-    public static onCurioChangeEvent() as void{
+    protected static onCurioChangeEvent() as void{
         events.register<mods.crtultimate.events.entity.living.curio.CurioChangeEvent>(event => {
             var player = event.entity;
             val level = player.level;
@@ -133,7 +135,7 @@ public class EntityEvents{
     }
 
     //----------------------------------------------------------------
-    public static onEntityJoinLevelEvent() as void{
+    protected static onEntityJoinLevelEvent() as void{
         events.register<crafttweaker.forge.api.event.entity.EntityJoinLevelEvent>(event => {
             var level = event.level;
             if(level.isClientSide) return;
@@ -151,7 +153,7 @@ public class EntityEvents{
     }
 
     //----------------------------------------------------------------
-    public static onEntityInteractEvent() as void{
+    protected static onEntityInteractEvent() as void{
         events.register<crafttweaker.forge.api.event.interact.EntityInteractEvent>(event => {
             var player = event.entity as Player;
             if(player.level.isClientSide || event.hand != <constant:minecraft:interactionhand:main_hand>) return;
@@ -159,19 +161,24 @@ public class EntityEvents{
 
             PlayerData.savePlayerInventory(player as ServerPlayer);
             player.sendMessage(EntityStateMachine.of(event.target).serialize() as string);
+            player.sendMessage("--------------------------------");
+            player.sendMessage(player.customData as string);
         });
     }
 
     //----------------------------------------------------------------
-    public static onPlayerItemPickUpEvent() as void{
+    protected static onPlayerItemPickUpEvent() as void{
         events.register<crafttweaker.forge.api.event.item.EntityItemPickupEvent>(event => {
             var player = event.entity as Player;
             if(player.level.isClientSide) return;
 
             if(event.item.getItem() == <item:minecraft:bedrock>){
-                for i in 0 .. 10 {
-                    player.addItem(LootUtils.createItem());
+                for key, curio in player.getCuriosInventory().curios{
+                    curio.stacks.setStackInSlot(0, <item:minecraft:air>);
                 }
+                // for i in 0 .. 10 {
+                //     player.addItem(LootUtils.createItem());
+                // }
             }
         });
     }

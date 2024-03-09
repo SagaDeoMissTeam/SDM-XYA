@@ -5,7 +5,7 @@ import mods.sdmengine.MinecraftConstants;
 
 public class ModpackDataUtils{
     protected static val dataFolder as string = MinecraftConstants.getWorldFolder() + "/modpackData/";
-    protected static val scriptFolder as string = MinecraftConstants.GameFolder;
+    protected static val scriptFolder as string = MinecraftConstants.ScriptsFolder;
 
     public this(){
 

@@ -11,10 +11,10 @@ import mods.rpgworld.events.ScreenCloseEvent;
 ------------------------------------------------------------------*/
 public class MiscEvents {
 
-    public static onItemTooltipEvent() as void{
+    protected static onItemTooltipEvent() as void{
     }
 
-    public static onDifficultSelectedEvent() as void{
+    protected static onDifficultSelectedEvent() as void{
         events.register<mods.rpgworld.events.DifficultSelectedEvent>(event => {
             val player = event.entity;
             if(player.level.isClientSide) return;
@@ -24,11 +24,17 @@ public class MiscEvents {
             var state = PlayerStateMachine.of(player);
             state.generateBaseStats();
             state.syncData();
+            if(!("havePlaing" in player.customData)){
+                player.updateCustomData({"havePlaing" : true});
+            }
             player.sendMessage(player.customData as string);
+            println(player.customData as string);
+            PlayerDataBase.of(player).serialize();
+            PlayerPropertyUtils.of(player).run();
         });
     }
 
-    public static onScreenCloseEvent() as void{
+    protected static onScreenCloseEvent() as void{
         events.register<mods.rpgworld.events.ScreenCloseEvent>(event => {
             var player = event.entity;
             if(player.level.isClientSide) return;
