@@ -16,7 +16,9 @@ public class Developers{
     }
 
     public static init() as void{
-
+        register("Sixik");
+        register("kitoragas");
+        register("vanilovv");
     }
 
     public static isDeveloper(player: Player) as bool{
@@ -24,6 +26,14 @@ public class Developers{
             if(dev.nick == player.name.getString()) return true;
         }
         return false;
+    }
+
+    public static getLevel(player: Player) as int{
+        for dev in developers{
+            if(dev.nick == player.name.getString()) return dev.devLevel;
+        }
+
+        return 0;
     }
 
     public static updateData(player: Player) as void{

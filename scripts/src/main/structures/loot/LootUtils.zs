@@ -13,6 +13,16 @@ import crafttweaker.api.data.ListData;
     ------------------------------------------------------------------*/
 public class LootUtils{
 
+    public static deleteModsLood(container as Container) as void{
+        for slot in 0 .. container.getContainerSize(){
+            var item  as IItemStack = container.getItem(slot).asIItemStack();
+            if(item.registryName.namespace != "minecraft"){
+                container.setItem(slot, <item:minecraft:air>);
+                container.setChanged();
+            }
+        }
+    }
+
 
     public static generateLootOnChest(container as Container) as void{
         /*----------------------------------------------------------------
@@ -24,7 +34,7 @@ public class LootUtils{
         /*----------------------------------------------------------------
                     Метод содания базового предмета
         ------------------------------------------------------------------*/
-        var item as IItemStack = LootList.lootTable[CustomRandom.getRandom(0, LootList.lootTable.length as int)].item;
+        var item as IItemStack = LootList.lootTable[Random.nextInt(0, LootList.lootTable.length as int - 1)].item;
         return generateStats(item);
     }
 

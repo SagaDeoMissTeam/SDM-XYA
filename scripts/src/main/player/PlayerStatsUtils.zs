@@ -91,7 +91,7 @@ public class PlayerStatsUtils{
         void_damage = void_damage - targetResist["void_resist"];
         divine_damage = divine_damage - targetResist["divine_resist"];
         chaos_damage = chaos_damage - targetResist["chaos_resist"];
-        
+
         void_damage = void_damage < 0.0 ? 0.08 : void_damage;
         damage_bonus = damage_bonus < 0.0 ? 0.08 : damage_bonus;
         divine_damage = divine_damage < 0.0 ? 0.08 : divine_damage;

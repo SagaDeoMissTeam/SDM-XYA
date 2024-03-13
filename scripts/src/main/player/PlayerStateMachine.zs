@@ -5,7 +5,10 @@ import crafttweaker.api.data.IData;
 import crafttweaker.api.data.ListData;
 import crafttweaker.api.data.DoubleData;
 import crafttweaker.api.item.IItemStack;
-
+import crafttweaker.forge.api.event.tick.TickEventType;
+import crafttweaker.forge.api.event.tick.PlayerTickEvent;
+import mods.rpgworld.Manager;
+import crafttweaker.api.entity.type.player.ServerPlayer;
 
         /*----------------------------------------------------------------
             Класс атрибутов/характеристик игрока
@@ -13,6 +16,35 @@ import crafttweaker.api.item.IItemStack;
 public class PlayerStateMachine{
     public var player as Player;
     public var propertyList as List<PlayerStatBase> = new List<PlayerStatBase>();
+    public var timers as List<TimerBase> = new List<TimerBase>();
+    public var needSync as bool = false;
+
+    public registerTimer(timer as TimerBase) as void{
+        timers.add(timer);
+    }
+
+    public onTick() as void{
+        if(!timers.isEmpty){
+            var remove as int = -1;
+            for timer in 0 .. timers.length as int{
+                if(!timers[timer].isEnd){
+                    timers[timer].onTick();
+                } else {
+                    remove = timer;
+                    break;
+                }
+            }
+
+            if(remove != -1) timers.remove(remove);
+            needSync = true;
+        }
+
+
+        if(needSync){
+            syncData();
+        }
+    }
+
 
     public static of(player as Player) as PlayerStateMachine{
         /*----------------------------------------------------------------
@@ -45,6 +77,83 @@ public class PlayerStateMachine{
         return this;
     }
 
+    public unlockMap() as void{
+        var data as MapData = serialize();
+        data["journey_map"] = true;
+        player.updateCustomData({"gameSetting" : {"playerSateMachine" : data}});
+        Manager.syncClientData(player as ServerPlayer);
+        Manager.sendUnlock(player, "sdm.unlock.journey_map", "sdm.unlock.journey_map.description");
+        needSync = false;
+    }
+    public lockMap() as void{
+        var data as MapData = serialize();
+        data["journey_map"] = false;
+        player.updateCustomData({"gameSetting" : {"playerSateMachine" : data}});
+        Manager.syncClientData(player as ServerPlayer);
+        needSync = false;
+    }
+    public unlockMiniMap() as void{
+        var data as MapData = serialize();
+        data["journey_mini_map"] = true;
+        player.updateCustomData({"gameSetting" : {"playerSateMachine" : data}});
+        Manager.syncClientData(player as ServerPlayer);
+        Manager.sendUnlock(player, "sdm.unlock.journey_mini_map", "sdm.unlock.journey_mini_map.description");
+        needSync = false;
+    }
+    public lockMiniMap() as void{
+        var data as MapData = serialize();
+        data["journey_mini_map"] = false;
+        player.updateCustomData({"gameSetting" : {"playerSateMachine" : data}});
+        Manager.syncClientData(player as ServerPlayer);
+        needSync = false;
+    }
+    public unlockJade() as void{
+        var data as MapData = serialize();
+        data["jade"] = true;
+        player.updateCustomData({"gameSetting" : {"playerSateMachine" : data}});
+        Manager.syncClientData(player as ServerPlayer);
+        Manager.sendUnlock(player, "sdm.unlock.jade", "sdm.unlock.jade.description");
+        needSync = false;
+    }
+    public lockJade() as void{
+        var data as MapData = serialize();
+        data["jade"] = false;
+        player.updateCustomData({"gameSetting" : {"playerSateMachine" : data}});
+        Manager.syncClientData(player as ServerPlayer);
+        needSync = false;
+    }
+    public unlockCurios() as void{
+        var data as MapData = serialize();
+        data["unlockCuriios"] = true;
+        player.updateCustomData({"gameSetting" : {"playerSateMachine" : data}});
+        Manager.syncClientData(player as ServerPlayer);
+        Manager.sendUnlock(player, "sdm.unlock.curios", "sdm.unlock.curios.description");
+        needSync = false;
+    }
+    public lockCurios() as void{
+        var data as MapData = serialize();
+        data["unlockCuriios"] = false;
+        player.updateCustomData({"gameSetting" : {"playerSateMachine" : data}});
+        Manager.syncClientData(player as ServerPlayer);
+        needSync = false;
+    }
+
+    public unlockSkillTree() as void{
+        var data as MapData = serialize();
+        data["unlockSkillTree"] = true;
+        player.updateCustomData({"gameSetting" : {"playerSateMachine" : data}});
+        Manager.syncClientData(player as ServerPlayer);
+        Manager.sendUnlock(player, "sdm.unlock.skill_tree", "sdm.unlock.skill_tree.description");
+        needSync = false;
+    }
+
+    public lockSkillTree() as void{
+        var data as MapData = serialize();
+        data["unlockSkillTree"] = false;
+        player.updateCustomData({"gameSetting" : {"playerSateMachine" : data}});
+        Manager.syncClientData(player as ServerPlayer);
+        needSync = false;
+    }
 
     public syncData() as void{
         /*----------------------------------------------------------------
@@ -54,7 +163,8 @@ public class PlayerStateMachine{
         val data = player.customData["gameSetting"];
         player.updateCustomData({"gameSetting" : {"playerSateMachine" : new MapData()}});
         player.updateCustomData({"gameSetting" : {"playerSateMachine" : serialize()}});
-        println(data["playerSateMachine"] as string);
+        Manager.syncClientData(player as ServerPlayer);
+        needSync = false;
     }
 
     public serialize() as MapData{
@@ -66,8 +176,13 @@ public class PlayerStateMachine{
         for property in propertyList{
             list.add(property.serialize());
         }
+        var timerData as ListData = new ListData();
+        for time in timers{
+            timerData.add(time.serialize());
+        }
         var dataList as ListData = new ListData(list);
         data.merge({"propertyList": dataList});
+        data.merge({"timerData": timerData});
         return data;
     }
 
@@ -77,7 +192,17 @@ public class PlayerStateMachine{
         ------------------------------------------------------------------*/
         if(data.isEmpty) return;
         propertyList = new List<PlayerStatBase>();
+        timers = new List<TimerBase>();
         var dataList as ListData = data["propertyList"] as ListData;
+        if("timerData" in data){
+            var timerData as ListData = data["timerData"] as ListData;
+            for timer in timerData{
+                var d1 as TimerBase = new TimerBase(player);
+                d1.deserialize(timer as MapData);
+                timers.add(d1);
+            }
+        }
+
         for dataFromList in dataList{
             if("value" in dataFromList){
                 if(dataFromList["value"] is DoubleData){
@@ -115,6 +240,12 @@ public class PlayerStateMachine{
         propertyList.add(new PlayerStatValue("critical_hit_chance", 0.0));
         propertyList.add(new PlayerStatValue("critical_hit_multiply", 0.0));
         propertyList.add(new PlayerStatValue("critical_hit_rank", 0.0));
+
+        propertyList.add(new PlayerStatValue("water_resist", 0.0));
+        propertyList.add(new PlayerStatValue("lava_resist", 0.0));
+
+        propertyList.add(new PlayerStatValue("loot_bonus", 0.0));
+        propertyList.add(new PlayerStatValue("loot_rarity_bonus", 0.0));
 
         propertyList.add(new PlayerStatValue("mind_resist", 0.0));
 

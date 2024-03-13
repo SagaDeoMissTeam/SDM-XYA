@@ -31,13 +31,24 @@ public class PlayerPropertyUtils{
             if("randomspawndimension" in player.customData["gameSetting"]){
                 spawnToRandomDimension();
             }
+            if(!("oredrop" in player.customData["gameSetting"])){
+                player.addGameStage("spawnOre");
+            }
+
+            if("plot" in player.customData["gameSetting"]){
+                player.customData["gameSetting"].merge({"disableContent" : 1});
+                var loreState as LoreStateMachine = LoreStateMachine.of(player);
+                loreState.updateLoreProgress(0);
+            } else {
+                player.addGameStage("disableContent");
+            }
 
             player.customData["gameSetting"].merge({"sdm_runned" : true});
         }
     }
 
     protected spawnToRandomDimension() as void{
-
+        Dimensions.randomTeleport(player);
     }
 }
 

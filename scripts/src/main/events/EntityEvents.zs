@@ -15,6 +15,11 @@ import crafttweaker.forge.api.event.interact.EntityInteractEvent;
 import crafttweaker.api.world.ServerLevel;
 import crafttweaker.forge.api.event.item.EntityItemPickupEvent;
 import crafttweaker.api.entity.type.player.ServerPlayer;
+import mods.rpgworld.events.BlockDropLootEvent;
+import crafttweaker.forge.api.event.tick.PlayerTickEvent;
+import crafttweaker.forge.api.event.entity.player.PlayerCloneEvent;
+import mods.crtultimate.events.entity.player.ServerChatEvent;
+import mods.crtultimate.events.entity.player.PlayerChestLootEvent;
 
 import mods.rpgworld.utils.CustomRandom;
 
@@ -157,12 +162,15 @@ public class EntityEvents{
         events.register<crafttweaker.forge.api.event.interact.EntityInteractEvent>(event => {
             var player = event.entity as Player;
             if(player.level.isClientSide || event.hand != <constant:minecraft:interactionhand:main_hand>) return;
+            var level as ServerLevel = player.level as ServerLevel;
 
+            //Manager.setDifficultValue(player, 100.0f);
 
-            PlayerData.savePlayerInventory(player as ServerPlayer);
-            player.sendMessage(EntityStateMachine.of(event.target).serialize() as string);
-            player.sendMessage("--------------------------------");
-            player.sendMessage(player.customData as string);
+            // if(Developers.getLevel(player) > 0){
+            //     player.sendMessage(EntityStateMachine.of(event.target).serialize() as string);
+            //     player.sendMessage("--------------------------------");
+            //     player.sendMessage(player.customData as string);
+            // }
         });
     }
 
@@ -173,12 +181,77 @@ public class EntityEvents{
             if(player.level.isClientSide) return;
 
             if(event.item.getItem() == <item:minecraft:bedrock>){
-                for key, curio in player.getCuriosInventory().curios{
-                    curio.stacks.setStackInSlot(0, <item:minecraft:air>);
+                // /*-------------------------------------------
+                //             TIMER PIZDEC
+                // ---------------------------------------------*/
+                // var d1 = PlayerStateMachine.of(player);
+                // d1.registerTimer(
+                //     new TimerBase("test", 20, player, LoreRegistry.LORE_LIST[0])
+                // );
+                // d1.syncData();
+
+
+                // Dimensions.randomTeleport(player);
+                for i in 0 .. 10 {
+                    player.addItem(LootUtils.createItem());
                 }
-                // for i in 0 .. 10 {
-                //     player.addItem(LootUtils.createItem());
-                // }
+            }
+        });
+    }
+
+    //----------------------------------------------------------------
+    protected static onBlockDropLootEvent() as void{
+        // events.register<mods.rpgworld.events.BlockDropLootEvent>(event => {
+        //     event.cancel();
+        // });
+    }
+
+    protected static onPlayerTickEvent() as void{
+        events.register<crafttweaker.forge.api.event.tick.PlayerTickEvent>(event => {
+            var player as Player = event.player;
+            if(player.level.isClientSide || event.type != <constant:forge:event/tick/type:player>) return;
+
+            event.every(20, event => {
+                PlayerStateMachine.of(player).onTick();
+                LoreManager.registered.onTick();
+            });
+        });
+    }
+
+    protected static onPlayerCloneEvent() as void{
+        events.register<crafttweaker.forge.api.event.entity.player.PlayerCloneEvent>(event => {
+            var original as Player = event.original;
+            var player as Player = event.entity;
+
+            player.updateCustomData(original.customData);
+        });
+    }
+
+    protected static onServerChatEvent() as void{
+        events.register<mods.crtultimate.events.entity.player.ServerChatEvent>(event => {
+            var player as Player = event.player;
+            var dev as DeveloperStateMachine? = DeveloperStateMachine.of(player) as DeveloperStateMachine?;
+            if(dev != null) if(dev.executeCommand(event.message.getString())){
+                event.cancel();
+                return;
+            }
+
+            if(LoreManager.registered.id != -1){
+                if(LoreHelper.loreChatRun(player, event.message)) {
+                    event.cancel();
+                    return;
+                }
+            }
+        });
+    }
+
+    protected static onPlayerChestLootEvent() as void{
+        events.register<mods.crtultimate.events.entity.player.PlayerChestLootEvent>(event => {
+            var player as Player = event.entity;
+            if(player.level.isClientSide) return;
+            var loreStateMachine = LoreStateMachine.of(player);
+            if(loreStateMachine.getLoreProgress() < 1 && loreStateMachine.getLoreProgress() != -1){
+                LootUtils.deleteModsLood(event.getInventory());
             }
         });
     }
@@ -194,5 +267,10 @@ public class EntityEvents{
         onEntityJoinLevelEvent();
         onEntityInteractEvent();
         onPlayerItemPickUpEvent();
+        onBlockDropLootEvent();
+        onPlayerTickEvent();
+        onPlayerCloneEvent();
+        onServerChatEvent();
+        onPlayerChestLootEvent();
     }
 }

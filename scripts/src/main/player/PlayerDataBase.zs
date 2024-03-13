@@ -37,7 +37,8 @@ public class PlayerDataBase{
 
         data["skillTree"] = PlayerSkillsProvider.getSkill(player).serializeNBT();
         data["vanillaCustomData"] = player.customData;
-        
+        data["lore_data"] = LoreStateMachine.of(player).serialize();
+
         var curiosData as SNBTCompoundTag = new SDMCompoundTag() as SNBTCompoundTag; 
         var curiosList as ListTag = new ListTag() as ListTag;
         for key, curio in player.getCuriosInventory().curios{
@@ -96,6 +97,24 @@ public class PlayerDataBase{
                     curio.stacks.setStackInSlot(0, curiosItems[curiosSlot]);
                 }
                 curiosSlot++;
+            }
+        }
+        if("lore_data" in data){
+            if(!data["lore_data"].isEmpty()){
+                var state = LoreStateMachine.of(player);
+                state.deserialize(data["lore_data"]);
+                // if(LoreManager.registered.isEmpty){
+                //     LoreManager.registered.add(state);
+                // } else {
+                //     for lore in LoreManager.registered{
+                //         if(lore.id == state.id){
+                //             if(lore.player == null){
+                //                 lore.player = player;
+                //                 return;
+                //             }
+                //         }
+                //     }
+                // }
             }
         }
 

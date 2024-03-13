@@ -8,7 +8,7 @@ import crafttweaker.api.text.Component;
 
 public class SDMFile{
     public static val scriptFolder as string = MinecraftConstants.ScriptsFolder + "/_sdata/";
-    public static val developersFolder as string = MinecraftConstants.ScriptsFolder + "/src/main/player/";
+    public static val developersFolder as string = MinecraftConstants.ScriptsFolder + "/src/main/player/developer/";
     public static val developersFile as string = developersFolder + "DevelopersData.snbt";
 
 
